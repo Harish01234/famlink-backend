@@ -14,10 +14,10 @@ services:
       - famlink-net  # Ensure the backend can communicate with MongoDB
     healthcheck:
       test: ["CMD", "mongo", "--eval", "db.runCommand('ping')"]
-      interval: 30s  # Run the health check every 30 seconds
-      retries: 5  # Retry 5 times before marking as unhealthy
-      start_period: 10s  # Wait for 10 seconds before starting health checks
-      timeout: 10s  # Timeout after 10 seconds if no response
+      interval: 30s      # Run the health check every 30 seconds
+      retries: 5         # Retry 5 times before marking unhealthy
+      start_period: 60s  # Give MongoDB 60 seconds to start
+      timeout: 20s       # Timeout after 20 seconds if no response
 
   # Express backend service
   backend:
