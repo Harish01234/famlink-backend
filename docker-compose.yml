@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # MongoDB service
+  # MongoDB service with health check
   mongodb:
     image: mongo:7.0
     container_name: mongodb
@@ -12,6 +12,12 @@ services:
     restart: always
     networks:
       - famlink-net  # Ensure the backend can communicate with MongoDB
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.runCommand('ping')"]
+      interval: 30s  # Run the health check every 30 seconds
+      retries: 5  # Retry 5 times before marking as unhealthy
+      start_period: 10s  # Wait for 10 seconds before starting health checks
+      timeout: 10s  # Timeout after 10 seconds if no response
 
   # Express backend service
   backend:
@@ -22,12 +28,10 @@ services:
     env_file:
       - .env  # Load environment variables from .env file
     environment:
-      - MONGO_URI=${MONGO_URI}  # MongoDB URI from .env file
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
-      - CORS_ORIGIN=${CORS_ORIGIN}
+      - MONGO_URI=mongodb://mongodb:27017/your-database-name  # MongoDB URI from MongoDB service
     depends_on:
-      - mongodb  # Ensure MongoDB is started before the backend
+      mongodb:
+        condition: service_healthy  # Wait for MongoDB to be healthy before starting the backend
     restart: always
     networks:
       - famlink-net  # Ensure both services can communicate
