@@ -28,7 +28,7 @@ services:
     env_file:
       - .env  # Load environment variables from .env file
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/your-database-name  # MongoDB URI from MongoDB service
+      - MONGO_URI=${MONGO_URI}  # Fetch the MongoDB URI from .env file
     depends_on:
       mongodb:
         condition: service_healthy  # Wait for MongoDB to be healthy before starting the backend
