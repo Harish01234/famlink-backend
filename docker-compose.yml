@@ -1,47 +1,42 @@
 version: '3.8'
 
 services:
-  # MongoDB service with health check
-  mongodb:
-    image: mongo:7.0
-    container_name: mongodb
-    ports:
-      - "27017:27017"  # Exposing MongoDB to the host on port 27017
-    volumes:
-      - /home/ubuntu/mongo_data:/data/db  # Persistent data storage
-    restart: always
-    networks:
-      - famlink-net  # Ensure the backend can communicate with MongoDB
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.runCommand('ping')"]
-      interval: 30s      # Run the health check every 30 seconds
-      retries: 5         # Retry 5 times before marking unhealthy
-      start_period: 60s  # Give MongoDB 60 seconds to start
-      timeout: 20s       # Timeout after 20 seconds if no response
-
   # Express backend service
   backend:
     build: .
     container_name: famlink-backend
     ports:
-      - "4000:4000"  # Exposing the backend API on port 4000
+      - "4000:4000"  # Exposing backend API on port 4000
     env_file:
-      - .env  # Load environment variables from .env file
+      - .env  # Ensure this loads environment variables like MONGO_URI
     environment:
-      - MONGO_URI=${MONGO_URI}  # Fetch the MongoDB URI from .env file
+      - MONGO_URI=${MONGO_URI}  # MongoDB URI from .env file
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     depends_on:
-      mongodb:
-        condition: service_healthy  # Wait for MongoDB to be healthy before starting the backend
+      - mongodb  # Ensures backend starts only after MongoDB is up
     restart: always
     networks:
-      - famlink-net  # Ensure both services can communicate
+      - famlink-net
 
-# Networks setup
+  # MongoDB service (running on your VPS, not in this Docker setup)
+  # This service just links to the existing MongoDB running on your VPS
+  mongodb:
+    container_name: mongodb  # Can be any name, since it's a reference to the remote service
+    image: mongo:7.0
+    ports:
+      - "27017:27017"  # Expose MongoDB to the host on port 27017
+    volumes:
+      - /home/ubuntu/mongo_data:/data/db  # Persist MongoDB data (ensure directory exists)
+    restart: always
+    networks:
+      - famlink-net
+
 networks:
   famlink-net:
-    driver: bridge  # Use bridge networking for inter-container communication
+    driver: bridge
 
-# Volumes setup (persistent storage for MongoDB)
 volumes:
-  mongo:
-    driver: local  # Use local storage for MongoDB data persistence
+  mongo-data:
+    driver: local  # Use local driver for MongoDB data persistence
