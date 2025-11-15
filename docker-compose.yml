@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # MongoDB service
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"  # Exposing MongoDB to the host on port 27017
+    volumes:
+      - /home/ubuntu/mongo_data:/data/db  # Persistent data storage
+    restart: always
+    networks:
+      - famlink-net  # Ensure the backend can communicate with MongoDB
+
+  # Express backend service
+  backend:
+    build: .
+    container_name: famlink-backend
+    ports:
+      - "4000:4000"  # Exposing the backend API on port 4000
+    env_file:
+      - .env  # Load environment variables from .env file
+    environment:
+      - MONGO_URI=${MONGO_URI}  # MongoDB URI from .env file
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+    depends_on:
+      - mongodb  # Ensure MongoDB is started before the backend
+    restart: always
+    networks:
+      - famlink-net  # Ensure both services can communicate
+
+# Networks setup
+networks:
+  famlink-net:
+    driver: bridge  # Use bridge networking for inter-container communication
+
+# Volumes setup (persistent storage for MongoDB)
+volumes:
+  mongo:
+    driver: local  # Use local storage for MongoDB data persistence
