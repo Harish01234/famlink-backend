@@ -11,6 +11,6 @@ const router = Router();
 
 router.post("/create", protect, createFamily);
 router.post("/join", protect, joinFamilyByCode);
-router.get("/members",  getFamilyMembers);
+router.post("/members",  getFamilyMembers);
 
 export default router;
